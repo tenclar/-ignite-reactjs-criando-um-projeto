@@ -4,8 +4,8 @@ import Prismic from '@prismicio/client';
 import { format } from 'date-fns';
 import ptBR from 'date-fns/locale/pt-BR';
 import { RichText } from 'prismic-dom';
+import { FiCalendar, FiClock, FiUser } from 'react-icons/fi';
 import { getPrismicClient } from '../../services/prismic';
-
 import commonStyles from '../../styles/common.module.scss';
 import styles from './post.module.scss';
 
@@ -37,8 +37,39 @@ export default function Post({ post }: PostProps) {
       <Head>
         <title> SpaceTraveling. - Posts </title>
       </Head>
+      <div className={styles.banner}>
+        <img src={post.data.banner.url} alt="banner" />
+      </div>
       <div className={commonStyles.container}>
-        <h1 className={styles.title}>Posts</h1>
+        <h1>{post.data.title}</h1>
+
+        <div className={styles.info}>
+          <time>
+            <FiCalendar size={20} />
+            {post.first_publication_date}
+          </time>
+          <span>
+            <FiUser size={20} />
+            {post.data.author}
+          </span>
+          <span>
+            <FiClock size={20} />
+            234 min
+          </span>
+        </div>
+        {post.data.content.map(content => {
+          return (
+            <article key={content.heading}>
+              <h2>{content.heading}</h2>
+              <div
+                className={styles.postContent}
+                dangerouslySetInnerHTML={{
+                  __html: RichText.asHtml(content.body),
+                }}
+              />
+            </article>
+          );
+        })}
       </div>
     </>
   );
@@ -113,6 +144,14 @@ export const getStaticProps: GetStaticProps = async ({
   };
 
   return {
-    props: { post, preview },
+    props: {
+      post,
+      navigation: {
+        prevPost: prevPost?.results,
+        nextPost: nextPost?.results,
+      },
+      preview,
+    },
+    revalidate: 60 * 60 * 12,
   };
 };

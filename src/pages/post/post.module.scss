@@ -1,4 +1,30 @@
-// TODO
-.title {
-  color:saddlebrown;
+.banner {
+  display: flex;
+  flex-direction: column;
+  margin-top: 0.5rem;
+  align-items: center;
+  background: var(--gray-800);
+ img {
+   width: auto;
+   height: 400px;
+
+ }
+}
+
+.info {
+  display: flex;
+  time, span {
+    margin-top: 1rem;
+    font-size: 0.93333rem;
+    display: flex;
+    align-items: center;
+    color: var(--gray-70);
+    padding-right: 1.2rem ;
+
+    svg {
+      margin-right: 0.3rem;
+      color: var(--white);
+
+    }
+  }
 }
