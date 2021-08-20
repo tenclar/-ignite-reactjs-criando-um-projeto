@@ -6,7 +6,7 @@ import { RichText } from 'prismic-dom';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import ptBR from 'date-fns/locale/pt-BR';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { getPrismicClient } from '../services/prismic';
 import commonStyles from '../styles/common.module.scss';
 import styles from './home.module.scss';
@@ -30,25 +30,43 @@ interface HomeProps {
   postsPagination: PostPagination;
 }
 
-export default function Home({ postsPagination }: HomeProps) {
+export default function Home({ postsPagination }: HomeProps): JSX.Element {
+  /*   const formattedPost = postsPagination.results.map(post => {
+    return {
+      slug: post.slug,
+      first_publication_date: post.first_publication_date,
+      data: {
+        title: post.data.title,
+        subtitle: post.data.subtitle,
+        author: post.data.author,
+      },
+    };
+  });
+ */
   const [posts, setPosts] = useState<Post[]>([]);
   const [nextPage, setNextPage] = useState(postsPagination.next_page);
 
-  async function handleNextPage(): Promise<void> {
-    await fetch(nextPage || '')
+  useEffect(() => {
+    setPosts(postsPagination.results);
+    setNextPage(postsPagination.next_page);
+  }, [postsPagination.results, postsPagination.next_page]);
+
+  function handleNextPage(): void {
+    fetch(nextPage)
       .then(res => res.json())
       .then(data => {
-        const formattedPost = postsPagination.results.map(post => {
+        const newPost = data.results.map(post => {
           return {
-            ...post,
-            first_publication_date: format(
-              new Date(post.first_publication_date),
-              'dd MMM yyyy',
-              { locale: ptBR }
-            ),
+            slug: post.slug,
+            first_publication_date: post.first_publication_date,
+            data: {
+              title: post.data.title,
+              subtitle: post.data.subtitle,
+              author: post.data.author,
+            },
           };
         });
-        setPosts([...posts, ...formattedPost]);
+        setPosts([...posts, ...newPost]);
         setNextPage(data.next_page);
       });
   }
@@ -61,9 +79,9 @@ export default function Home({ postsPagination }: HomeProps) {
 
       <main className={commonStyles.container}>
         <div className={styles.postList}>
-          {postsPagination.results.map(post => (
-            <Link href={`/post/${post.slug}`}>
-              <a key={post.slug}>
+          {posts.map(post => (
+            <Link key={post.slug} href={`/post/${post.slug}`}>
+              <a>
                 <strong>{post.data.title}</strong>
                 <sub>{post.data.subtitle}</sub>
                 <div className={styles.info}>
@@ -89,8 +107,6 @@ export default function Home({ postsPagination }: HomeProps) {
               Carregar mais posts
             </button>
           )}
-
-          {preview && <PreviewButton />}
         </div>
       </main>
     </>
@@ -109,11 +125,6 @@ export const getStaticProps: GetStaticProps = async () => {
   const posts = postsResponse.results.map(post => {
     return {
       slug: post.uid,
-      data: {
-        title: RichText.asText(post.data.title),
-        subtitle: RichText.asText(post.data.subtitle),
-        author: RichText.asText(post.data.author),
-      },
       first_publication_date: format(
         new Date(post.first_publication_date),
         'dd MMM yyyy',
@@ -121,6 +132,11 @@ export const getStaticProps: GetStaticProps = async () => {
           locale: ptBR,
         }
       ),
+      data: {
+        title: RichText.asText(post.data.title),
+        subtitle: RichText.asText(post.data.subtitle),
+        author: RichText.asText(post.data.author),
+      },
     };
   });
 

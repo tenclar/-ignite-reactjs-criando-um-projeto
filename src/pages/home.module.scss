@@ -64,8 +64,11 @@
 }
 
 .buttonPosts {
-
-  color: #FF57B2;
-  font-size: 1rem;
+  border: 0;
+  background: transparent;
+  color: var(--pink-500);
+  margin-top: 4rem;
+    font-size: 1.125rem;
+    font-weight: 600;
 }
 
