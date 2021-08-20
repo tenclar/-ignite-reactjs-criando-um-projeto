@@ -57,10 +57,11 @@ export default function Post({ post }: PostProps) {
             234 min
           </span>
         </div>
-        {post.data.content.map(content => {
-          return (
-            <article key={content.heading}>
-              <h2>{content.heading}</h2>
+
+        {post.data.content.map(content =>
+           (
+            <article key={`${content.heading}${Math.random()}`}>
+              <h2>{RichText.asText(content.heading)}</h2>
               <div
                 className={styles.postContent}
                 dangerouslySetInnerHTML={{
@@ -68,8 +69,8 @@ export default function Post({ post }: PostProps) {
                 }}
               />
             </article>
-          );
-        })}
+          )
+        )}
       </div>
     </>
   );

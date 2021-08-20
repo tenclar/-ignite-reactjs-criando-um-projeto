@@ -31,7 +31,7 @@ interface HomeProps {
 }
 
 export default function Home({ postsPagination }: HomeProps): JSX.Element {
-  /*   const formattedPost = postsPagination.results.map(post => {
+   /*  const formattedPost = postsPagination.results.map(post => {
     return {
       slug: post.slug,
       first_publication_date: post.first_publication_date,
@@ -41,12 +41,13 @@ export default function Home({ postsPagination }: HomeProps): JSX.Element {
         author: post.data.author,
       },
     };
-  });
- */
+  }); */
+
   const [posts, setPosts] = useState<Post[]>([]);
-  const [nextPage, setNextPage] = useState(postsPagination.next_page);
+  const [nextPage, setNextPage] = useState('');
 
   useEffect(() => {
+    console.log(postsPagination.results);
     setPosts(postsPagination.results);
     setNextPage(postsPagination.next_page);
   }, [postsPagination.results, postsPagination.next_page]);
@@ -57,15 +58,21 @@ export default function Home({ postsPagination }: HomeProps): JSX.Element {
       .then(data => {
         const newPost = data.results.map(post => {
           return {
-            slug: post.slug,
-            first_publication_date: post.first_publication_date,
+            slug: post.uid,
+            first_publication_date: format(
+              new Date(post.first_publication_date),
+              'dd MMM yyyy',
+              {
+                locale: ptBR,
+              }),
             data: {
-              title: post.data.title,
-              subtitle: post.data.subtitle,
-              author: post.data.author,
+              title: RichText.asText(post.data.title),
+              subtitle: RichText.asText(post.data.subtitle),
+              author: RichText.asText(post.data.author),
             },
           };
         });
+
         setPosts([...posts, ...newPost]);
         setNextPage(data.next_page);
       });
@@ -130,8 +137,7 @@ export const getStaticProps: GetStaticProps = async () => {
         'dd MMM yyyy',
         {
           locale: ptBR,
-        }
-      ),
+        }),
       data: {
         title: RichText.asText(post.data.title),
         subtitle: RichText.asText(post.data.subtitle),
