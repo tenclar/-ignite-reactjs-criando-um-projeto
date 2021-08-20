@@ -13,7 +13,7 @@ import styles from './home.module.scss';
 
 interface Post {
   first_publication_date: string | null;
-  slug: string;
+  uid: string;
   data: {
     title: string;
     subtitle: string;
@@ -31,28 +31,28 @@ interface HomeProps {
 }
 
 export default function Home({ postsPagination }: HomeProps): JSX.Element {
-   /*  const formattedPost = postsPagination.results.map(post => {
+    const formattedPost = postsPagination.results.map(post => {
     return {
-      slug: post.slug,
-      first_publication_date: post.first_publication_date,
+      first_publication_date: format(
+        new Date(post.first_publication_date),
+        'dd MMM yyyy',
+        {
+          locale: ptBR,
+        }),
+      uid: post.uid,
       data: {
         title: post.data.title,
         subtitle: post.data.subtitle,
         author: post.data.author,
       },
-    };
-  }); */
+    }
+  });
 
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [nextPage, setNextPage] = useState('');
+  const [posts, setPosts] = useState<Post[]>(formattedPost);
+  const [nextPage, setNextPage] = useState(postsPagination.next_page);
 
-  useEffect(() => {
-    console.log(postsPagination.results);
-    setPosts(postsPagination.results);
-    setNextPage(postsPagination.next_page);
-  }, [postsPagination.results, postsPagination.next_page]);
 
-  function handleNextPage(): void {
+  /* function handleNextPage(): void {
     fetch(nextPage)
       .then(res => res.json())
       .then(data => {
@@ -66,9 +66,9 @@ export default function Home({ postsPagination }: HomeProps): JSX.Element {
                 locale: ptBR,
               }),
             data: {
-              title: RichText.asText(post.data.title),
-              subtitle: RichText.asText(post.data.subtitle),
-              author: RichText.asText(post.data.author),
+              title: post.data.title,
+              subtitle: post.data.subtitle,
+              author: post.data.author,
             },
           };
         });
@@ -76,6 +76,31 @@ export default function Home({ postsPagination }: HomeProps): JSX.Element {
         setPosts([...posts, ...newPost]);
         setNextPage(data.next_page);
       });
+  } */
+
+  async function loadMorePostsButton(): Promise<void> {
+    if(nextPage === null){
+      return;
+    }
+   const postResults = await fetch(`${nextPage}`).then(res=> res.json());
+   setNextPage(postResults.next_page);
+    const newPosts = postResults.results.map(post => {
+      return {
+        uid: post.uid,
+        first_publication_date: format(
+          new Date(post.first_publication_date),
+          'dd MMM yyyy',
+          {
+            locale: ptBR,
+          }),
+          data: {
+            title: post.data.title,
+            subtitle: post.data.subtitle,
+            author: post.data.author,
+          },
+      }
+    });
+    setPosts([...posts, ...newPosts]);
   }
 
   return (
@@ -87,7 +112,7 @@ export default function Home({ postsPagination }: HomeProps): JSX.Element {
       <main className={commonStyles.container}>
         <div className={styles.postList}>
           {posts.map(post => (
-            <Link key={post.slug} href={`/post/${post.slug}`}>
+            <Link  href={`/post/${post.uid}`} key={post.uid}>
               <a>
                 <strong>{post.data.title}</strong>
                 <sub>{post.data.subtitle}</sub>
@@ -105,15 +130,15 @@ export default function Home({ postsPagination }: HomeProps): JSX.Element {
             </Link>
           ))}
 
+
+
           {nextPage && (
-            <button
-              className={styles.buttonPosts}
-              type="button"
-              onClick={handleNextPage}
-            >
+            <button  type="button" onClick={loadMorePostsButton} className={styles.buttonPosts} >
               Carregar mais posts
             </button>
           )}
+
+
         </div>
       </main>
     </>
@@ -131,29 +156,25 @@ export const getStaticProps: GetStaticProps = async () => {
   );
   const posts = postsResponse.results.map(post => {
     return {
-      slug: post.uid,
-      first_publication_date: format(
-        new Date(post.first_publication_date),
-        'dd MMM yyyy',
-        {
-          locale: ptBR,
-        }),
+      uid: post.uid,
+      first_publication_date:
+        post.first_publication_date,
       data: {
-        title: RichText.asText(post.data.title),
-        subtitle: RichText.asText(post.data.subtitle),
-        author: RichText.asText(post.data.author),
+        title: post.data.title,
+        subtitle: post.data.subtitle,
+        author: post.data.author,
       },
     };
   });
-
+const postsPagination ={
+  next_page: postsResponse.next_page,
+  results: posts,
+}
   // console.log(JSON.stringify(postsResponse, null, 2));
   return {
     props: {
-      postsPagination: {
-        results: posts,
-        next_page: postsResponse.next_page,
-      },
+      postsPagination,
     },
-    revalidate: 60 * 60 * 12,
+
   };
 };

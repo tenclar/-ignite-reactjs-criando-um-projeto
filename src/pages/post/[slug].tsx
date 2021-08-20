@@ -8,9 +8,11 @@ import { FiCalendar, FiClock, FiUser } from 'react-icons/fi';
 import { getPrismicClient } from '../../services/prismic';
 import commonStyles from '../../styles/common.module.scss';
 import styles from './post.module.scss';
+import { calcTimeReading } from '../../utils/CalcTimeReading';
 
 interface Post {
   slug: string;
+  timeReading:string;
   first_publication_date: string | null;
   data: {
     title: string;
@@ -54,7 +56,7 @@ export default function Post({ post }: PostProps) {
           </span>
           <span>
             <FiClock size={20} />
-            234 min
+            {post.timeReading} min
           </span>
         </div>
 
@@ -101,6 +103,8 @@ export const getStaticProps: GetStaticProps = async ({
     ref: previewData?.ref ?? null,
   });
 
+  const timeReading = calcTimeReading(response.data)
+
   const prevPost = await prismic.query(
     [Prismic.predicates.at('document.type', 'post')],
     {
@@ -130,6 +134,7 @@ export const getStaticProps: GetStaticProps = async ({
 
   const post = {
     slug,
+    timeReading,
     first_publication_date: format(
       new Date(response.first_publication_date),
       'dd MMM yyyy',
@@ -142,6 +147,7 @@ export const getStaticProps: GetStaticProps = async ({
       author: RichText.asText(response.data.author),
       content: response.data.content,
     },
+
   };
 
   return {
