@@ -1,3 +1,4 @@
+/* eslint-disable react/no-danger */
 import { GetStaticPaths, GetStaticProps } from 'next';
 import Head from 'next/head';
 import Prismic from '@prismicio/client';
@@ -5,6 +6,8 @@ import { format } from 'date-fns';
 import ptBR from 'date-fns/locale/pt-BR';
 import { RichText } from 'prismic-dom';
 import { FiCalendar, FiClock, FiUser } from 'react-icons/fi';
+import { useRouter } from 'next/router';
+import { useState } from 'react';
 import { getPrismicClient } from '../../services/prismic';
 import commonStyles from '../../styles/common.module.scss';
 import styles from './post.module.scss';
@@ -12,7 +15,7 @@ import { calcTimeReading } from '../../utils/CalcTimeReading';
 
 interface Post {
   slug: string;
-  timeReading:string;
+  timeReading: string;
   first_publication_date: string | null;
   data: {
     title: string;
@@ -34,36 +37,51 @@ interface PostProps {
 }
 
 export default function Post({ post }: PostProps) {
+  const router = useRouter();
+
+  if (router.isFallback) {
+    return <h1>Carregando...</h1>;
+  }
+  const formatDate = format(
+    new Date(post.first_publication_date),
+    'dd MMM yyyy',
+    { locale: ptBR }
+  );
+  const timeReading = calcTimeReading(post.data).toString();
   return (
     <>
       <Head>
         <title> SpaceTraveling. - Posts </title>
       </Head>
+
       <div className={styles.banner}>
         <img src={post.data.banner.url} alt="banner" />
       </div>
-      <div className={commonStyles.container}>
-        <h1>{post.data.title}</h1>
 
-        <div className={styles.info}>
-          <time>
-            <FiCalendar size={20} />
-            {post.first_publication_date}
-          </time>
-          <span>
-            <FiUser size={20} />
-            {post.data.author}
-          </span>
-          <span>
-            <FiClock size={20} />
-            {post.timeReading} min
-          </span>
-        </div>
+      <main className={commonStyles.container}>
+        <div className={styles.post}>
+          <div className={styles.postTop}>
+            <h1>{post.data.title}</h1>
 
-        {post.data.content.map(content =>
-           (
+            <ul className={styles.info}>
+              <li>
+                <FiCalendar size={20} />
+                {formatDate}
+              </li>
+              <li>
+                <FiUser size={20} />
+                {post.data.author}
+              </li>
+              <li>
+                <FiClock size={20} />
+                {`${timeReading} min`}
+              </li>
+            </ul>
+          </div>
+
+          {post.data.content.map(content => (
             <article key={`${content.heading}${Math.random()}`}>
-              <h2>{RichText.asText(content.heading)}</h2>
+              <h2>{content.heading}</h2>
               <div
                 className={styles.postContent}
                 dangerouslySetInnerHTML={{
@@ -71,9 +89,9 @@ export default function Post({ post }: PostProps) {
                 }}
               />
             </article>
-          )
-        )}
-      </div>
+          ))}
+        </div>
+      </main>
     </>
   );
 }
@@ -103,8 +121,6 @@ export const getStaticProps: GetStaticProps = async ({
     ref: previewData?.ref ?? null,
   });
 
-  const timeReading = calcTimeReading(response.data)
-
   const prevPost = await prismic.query(
     [Prismic.predicates.at('document.type', 'post')],
     {
@@ -133,21 +149,23 @@ export const getStaticProps: GetStaticProps = async ({
   }
 
   const post = {
-    slug,
-    timeReading,
-    first_publication_date: format(
-      new Date(response.first_publication_date),
-      'dd MMM yyyy',
-      { locale: ptBR }
-    ),
+    uid: response.uid,
+    slug: response.uid,
+    first_publication_date: response.first_publication_date,
     data: {
-      title: RichText.asText(response.data.title),
-      subtitle: RichText.asText(response.data.subtitle),
-      banner: response.data.banner,
-      author: RichText.asText(response.data.author),
-      content: response.data.content,
+      title: response.data.title,
+      subtitle: response.data.subtitle,
+      banner: {
+        url: response.data.banner.url,
+      },
+      author: response.data.author,
+      content: response.data.content.map(c => {
+        return {
+          heading: c.heading,
+          body: [...c.body],
+        };
+      }),
     },
-
   };
 
   return {
@@ -159,6 +177,5 @@ export const getStaticProps: GetStaticProps = async ({
       },
       preview,
     },
-    revalidate: 60 * 60 * 12,
   };
 };

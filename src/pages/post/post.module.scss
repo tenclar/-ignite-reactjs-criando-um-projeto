@@ -10,6 +10,29 @@
 
  }
 }
+.post {
+  h2 {
+    font-size: 2.25rem;
+    margin: 3rem 0;
+  }
+  p, span, a, ul {
+    font-size: 1.125rem;
+    line-height: 1.8;
+    margin: 1.8rem 0;
+  }
+  strong {
+    font-weight: 700;
+
+  }
+  ul {
+    display: flex;
+    padding-left: 1.5rem;
+    align-items: center;
+    li {
+      margin: 0.5rem 0;
+    }
+  }
+}
 
 .info {
   display: flex;
@@ -26,5 +49,41 @@
       color: var(--white);
 
     }
+  }
+}
+
+.postTop {
+
+  > h1 {
+    font-size: 3rem;
+    margin-bottom: 1.5rem;
+  }
+
+  > ul {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+    display: flex;
+
+    align-items: center;
+    align-content: center;
+    //margin-bottom: 4rem;
+    & li {
+      display: flex;
+      align-items: center;
+      margin: 0;
+      font-size: 0.875rem;
+
+      & svg {
+        margin-right: 0.5rem;
+
+
+      }
+      & + li {
+        margin-left: 1.625rem;
+
+      }
+    }
+
   }
 }
