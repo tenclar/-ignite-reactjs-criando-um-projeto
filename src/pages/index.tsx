@@ -28,29 +28,33 @@ interface PostPagination {
 
 interface HomeProps {
   postsPagination: PostPagination;
+  preview: boolean;
 }
 
-export default function Home({ postsPagination }: HomeProps): JSX.Element {
-    const formattedPost = postsPagination.results.map(post => {
+export default function Home({
+  postsPagination,
+  preview,
+}: HomeProps): JSX.Element {
+  const formattedPost = postsPagination.results.map(post => {
     return {
       first_publication_date: format(
         new Date(post.first_publication_date),
         'dd MMM yyyy',
         {
           locale: ptBR,
-        }),
+        }
+      ),
       uid: post.uid,
       data: {
         title: post.data.title,
         subtitle: post.data.subtitle,
         author: post.data.author,
       },
-    }
+    };
   });
 
   const [posts, setPosts] = useState<Post[]>(formattedPost);
   const [nextPage, setNextPage] = useState(postsPagination.next_page);
-
 
   /* function handleNextPage(): void {
     fetch(nextPage)
@@ -79,11 +83,11 @@ export default function Home({ postsPagination }: HomeProps): JSX.Element {
   } */
 
   async function loadMorePostsButton(): Promise<void> {
-    if(nextPage === null){
+    if (nextPage === null) {
       return;
     }
-   const postResults = await fetch(`${nextPage}`).then(res=> res.json());
-   setNextPage(postResults.next_page);
+    const postResults = await fetch(`${nextPage}`).then(res => res.json());
+    setNextPage(postResults.next_page);
     const newPosts = postResults.results.map(post => {
       return {
         uid: post.uid,
@@ -92,13 +96,14 @@ export default function Home({ postsPagination }: HomeProps): JSX.Element {
           'dd MMM yyyy',
           {
             locale: ptBR,
-          }),
-          data: {
-            title: post.data.title,
-            subtitle: post.data.subtitle,
-            author: post.data.author,
-          },
-      }
+          }
+        ),
+        data: {
+          title: post.data.title,
+          subtitle: post.data.subtitle,
+          author: post.data.author,
+        },
+      };
     });
     setPosts([...posts, ...newPosts]);
   }
@@ -112,7 +117,7 @@ export default function Home({ postsPagination }: HomeProps): JSX.Element {
       <main className={commonStyles.container}>
         <div className={styles.postList}>
           {posts.map(post => (
-            <Link  href={`/post/${post.uid}`} key={post.uid}>
+            <Link href={`/post/${post.uid}`} key={post.uid}>
               <a>
                 <strong>{post.data.title}</strong>
                 <sub>{post.data.subtitle}</sub>
@@ -130,22 +135,30 @@ export default function Home({ postsPagination }: HomeProps): JSX.Element {
             </Link>
           ))}
 
-
-
           {nextPage && (
-            <button  type="button" onClick={loadMorePostsButton} className={styles.buttonPosts} >
+            <button
+              type="button"
+              onClick={loadMorePostsButton}
+              className={styles.buttonPosts}
+            >
               Carregar mais posts
             </button>
           )}
-
-
         </div>
+
+        {preview && (
+          <aside>
+            <Link href="/api/exit-preview">
+              <a className={commonStyles.preview}>Sair do modo Preview</a>
+            </Link>
+          </aside>
+        )}
       </main>
     </>
   );
 }
 
-export const getStaticProps: GetStaticProps = async () => {
+export const getStaticProps: GetStaticProps = async ({ preview = false }) => {
   const prismic = getPrismicClient();
   const postsResponse = await prismic.query(
     [Prismic.predicates.at('document.type', 'posts')],
@@ -157,8 +170,7 @@ export const getStaticProps: GetStaticProps = async () => {
   const posts = postsResponse.results.map(post => {
     return {
       uid: post.uid,
-      first_publication_date:
-        post.first_publication_date,
+      first_publication_date: post.first_publication_date,
       data: {
         title: post.data.title,
         subtitle: post.data.subtitle,
@@ -166,15 +178,15 @@ export const getStaticProps: GetStaticProps = async () => {
       },
     };
   });
-const postsPagination ={
-  next_page: postsResponse.next_page,
-  results: posts,
-}
+  const postsPagination = {
+    next_page: postsResponse.next_page,
+    results: posts,
+  };
   // console.log(JSON.stringify(postsResponse, null, 2));
   return {
     props: {
       postsPagination,
+      preview,
     },
-
   };
 };

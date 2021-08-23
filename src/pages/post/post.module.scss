@@ -10,29 +10,6 @@
 
  }
 }
-.post {
-  h2 {
-    font-size: 2.25rem;
-    margin: 3rem 0;
-  }
-  p, span, a, ul {
-    font-size: 1.125rem;
-    line-height: 1.8;
-    margin: 1.8rem 0;
-  }
-  strong {
-    font-weight: 700;
-
-  }
-  ul {
-    display: flex;
-    padding-left: 1.5rem;
-    align-items: center;
-    li {
-      margin: 0.5rem 0;
-    }
-  }
-}
 
 .info {
   display: flex;
@@ -53,10 +30,11 @@
 }
 
 .postTop {
+  margin-bottom: 1.5rem;
 
   > h1 {
     font-size: 3rem;
-    margin-bottom: 1.5rem;
+
   }
 
   > ul {
@@ -84,6 +62,58 @@
 
       }
     }
+  }
+  > span {
+    margin-top: 1rem;
+    display: block;
+    font-style: italic ;
+    font-size: 0.8rem;
+    color: var(--gray-70);
+  }
+}
+.post {
+  h2 {
+    font-size: 2.25rem;
+    margin: 3rem 0;
+  }
+  p, span, a, ul {
+    font-size: 1.125rem;
+    line-height: 1.8;
+    margin: 1.8rem 0;
+  }
+  strong {
+    font-weight: 700;
 
+  }
+  ul {
+    display: flex;
+    padding-left: 1.5rem;
+    align-items: center;
+    li {
+      margin: 0.5rem 0;
+    }
+  }
+}
+.navigation {
+  display: flex;
+  align-items:  center;
+  justify-content: space-betweeen;
+  border-top: 1px solid var(--gray-800);
+
+  h3 {
+    font-size: 1.125rem;
+    font-weight: 400;
+    color: var(--heading);
+  }
+  a {
+    color: var(--highlight);
+    font-weight: 600;
+  }
+  div {
+    padding-top: 3rem;
+  }
+
+  div + div {
+    text-align: right;
   }
 }

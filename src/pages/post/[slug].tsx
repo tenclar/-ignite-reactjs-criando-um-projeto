@@ -8,15 +8,18 @@ import { RichText } from 'prismic-dom';
 import { FiCalendar, FiClock, FiUser } from 'react-icons/fi';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
+import Link from 'next/link';
 import { getPrismicClient } from '../../services/prismic';
 import commonStyles from '../../styles/common.module.scss';
 import styles from './post.module.scss';
 import { calcTimeReading } from '../../utils/CalcTimeReading';
+import Comments from '../../components/Comments';
 
 interface Post {
   slug: string;
   timeReading: string;
   first_publication_date: string | null;
+  last_publication_date: string | null;
   data: {
     title: string;
     banner: {
@@ -34,10 +37,26 @@ interface Post {
 
 interface PostProps {
   post: Post;
+  preview: boolean;
+  navigation: {
+    prevPost: {
+      uid: string;
+      data: {
+        title: string;
+      };
+    }[];
+    nextPost: {
+      uid: string;
+      data: {
+        title: string;
+      };
+    }[];
+  };
 }
 
-export default function Post({ post }: PostProps) {
+export default function Post({ post, navigation, preview }: PostProps) {
   const router = useRouter();
+  const [edited, setEdited] = useState(null);
 
   if (router.isFallback) {
     return <h1>Carregando...</h1>;
@@ -47,6 +66,18 @@ export default function Post({ post }: PostProps) {
     'dd MMM yyyy',
     { locale: ptBR }
   );
+  if (post.first_publication_date !== post.last_publication_date) {
+    setEdited(
+      format(
+        new Date(post.last_publication_date),
+        "'* editado em' dd MMM yyyy, às' H':'m",
+        {
+          locale: ptBR,
+        }
+      )
+    );
+  }
+
   const timeReading = calcTimeReading(post.data).toString();
   return (
     <>
@@ -77,6 +108,7 @@ export default function Post({ post }: PostProps) {
                 {`${timeReading} min`}
               </li>
             </ul>
+            <span>{edited} </span>
           </div>
 
           {post.data.content.map(content => (
@@ -91,6 +123,35 @@ export default function Post({ post }: PostProps) {
             </article>
           ))}
         </div>
+
+        <section className={`${styles.navigation} ${commonStyles.container}`}>
+          {navigation.prevPost.length > 0 && (
+            <div>
+              <h3>{navigation.prevPost[0].data.title}</h3>
+              <Link href={`/post/${navigation.prevPost[0].uid}`}>
+                <a>Post anterior</a>
+              </Link>
+            </div>
+          )}
+          {navigation.nextPost.length > 0 && (
+            <div>
+              <h3>{navigation.nextPost[0].data.title}</h3>
+              <Link href={`/post/${navigation.nextPost[0].uid}`}>
+                <a>Próximo post</a>
+              </Link>
+            </div>
+          )}
+        </section>
+
+        <Comments />
+
+        {preview && (
+          <aside>
+            <Link href="/api/exit-preview">
+              <a className={commonStyles.preview}>Sair do modo Preview</a>
+            </Link>
+          </aside>
+        )}
       </main>
     </>
   );
@@ -152,6 +213,7 @@ export const getStaticProps: GetStaticProps = async ({
     uid: response.uid,
     slug: response.uid,
     first_publication_date: response.first_publication_date,
+    last_publication_date: response.last_publication_date,
     data: {
       title: response.data.title,
       subtitle: response.data.subtitle,
